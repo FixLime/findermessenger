@@ -1,0 +1,56 @@
+workflows:
+  ios-build:
+    name: Finder iOS Build
+    max_build_duration: 60
+    environment:
+      xcode: latest
+    scripts:
+      - name: Install XcodeGen
+        script: brew install xcodegen
+
+      - name: Generate Xcode project
+        script: |
+          xcodegen generate
+          echo "=== Generated project ==="
+          ls -la Finder.xcodeproj/
+          xcodebuild -project Finder.xcodeproj -list
+
+      - name: Build
+        script: |
+          xcodebuild \
+            -project Finder.xcodeproj \
+            -scheme Finder \
+            -sdk iphoneos \
+            -destination "generic/platform=iOS" \
+            -configuration Release \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CONFIGURATION_BUILD_DIR="$CM_BUILD_DIR/build" \
+            build | tail -20
+
+          echo "=== Build output ==="
+          ls -la "$CM_BUILD_DIR/build/" || true
+          find "$CM_BUILD_DIR" -name "*.app" -type d 2>/dev/null || true
+
+      - name: Package IPA
+        script: |
+          APP_PATH=$(find "$CM_BUILD_DIR" -name "Finder.app" -type d | head -1)
+          echo "Found app at: $APP_PATH"
+
+          if [ -z "$APP_PATH" ]; then
+            echo "ERROR: Finder.app not found!"
+            find "$CM_BUILD_DIR" -name "*.app" -type d
+            exit 1
+          fi
+
+          mkdir -p Payload
+          cp -r "$APP_PATH" Payload/
+          echo "=== Payload contents ==="
+          ls -la Payload/
+          ls -la Payload/Finder.app/
+          zip -r Finder.ipa Payload/
+          ls -la Finder.ipa
+
+    artifacts:
+      - Finder.ipa
+      - /tmp/xcodebuild_logs/*.log

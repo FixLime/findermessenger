@@ -1,0 +1,37 @@
+name: Finder
+options:
+  bundleIdPrefix: com.finder
+  deploymentTarget:
+    iOS: "26.0"
+  developmentLanguage: ru
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    SUPPORTS_MACCATALYST: NO
+    CODE_SIGNING_ALLOWED: NO
+
+packages:
+  WebRTC:
+    url: https://github.com/stasel/WebRTC
+    from: "126.0.0"
+
+targets:
+  Finder:
+    type: application
+    platform: iOS
+    sources:
+      - path: Finder
+    dependencies:
+      - package: WebRTC
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.finder.messenger
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: 1
+        INFOPLIST_FILE: Finder/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        ENABLE_PREVIEWS: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
