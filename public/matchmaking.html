@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Матчмейкинг — CHEAT.GG</title>
+  <link rel="stylesheet" href="/css/main.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/dashboard.html" class="navbar-logo">CHEAT<span>.GG</span></a>
+    <ul class="navbar-nav">
+      <li><a href="/dashboard.html">Главная</a></li>
+      <li><a href="/matchmaking.html" class="active">Матчмейкинг</a></li>
+      <li><a href="/leaderboard.html">Рейтинг</a></li>
+    </ul>
+    <div class="navbar-right">
+      <div class="navbar-user" onclick="logout()">
+        <div class="avatar avatar-sm" id="nav-avatar" style="background:#ff5500">?</div>
+        <span class="navbar-user-name" id="nav-username">—</span>
+        <div id="nav-level" style="
+          width:24px;height:24px;border-radius:50%;border:2px solid #1dcf3c;
+          color:#1dcf3c;display:flex;align-items:center;justify-content:center;
+          font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700
+        ">4</div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mm-page">
+    <div class="mm-container">
+
+      <!-- ── STATE: IDLE ──────────────────────────────────────────────────── -->
+      <div id="state-idle" class="mm-idle hidden">
+        <div style="margin-bottom:28px" id="idle-level"></div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;color:var(--text2);text-transform:uppercase;margin-bottom:4px">
+          ГОТОВ К БОЮ
+        </div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;margin-bottom:4px" id="idle-username">—</div>
+        <div style="margin-bottom:6px" id="idle-cheat"></div>
+        <div style="color:var(--text2);font-size:14px;margin-bottom:32px" id="idle-elo">1000 ELO</div>
+
+        <button class="find-match-btn" onclick="startSearch()" style="font-size:20px;padding:18px 56px">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>
+          </svg>
+          НАЧАТЬ ПОИСК
+        </button>
+
+        <div style="margin-top:14px;color:var(--text3);font-size:13px">
+          Подбор по ELO ± 300 • Приоритет по читу
+        </div>
+      </div>
+
+      <!-- ── STATE: SEARCHING ────────────────────────────────────────────── -->
+      <div id="state-searching" class="mm-searching hidden">
+        <div class="search-ring"></div>
+        <div class="search-title">ПОИСК МАТЧА</div>
+        <div class="search-timer" id="search-timer">00:00</div>
+        <div class="search-info" id="search-queue-size">~127 игроков в очереди</div>
+        <div style="margin-top:8px;font-size:12px;color:var(--text3)">Режим: 5v5 • Ранговый</div>
+        <button class="btn btn-ghost btn-lg" onclick="cancelSearch()" style="margin-top:28px">
+          ОТМЕНИТЬ ПОИСК
+        </button>
+      </div>
+
+      <!-- ── STATE: MATCH FOUND ──────────────────────────────────────────── -->
+      <div id="state-found" class="mm-found hidden">
+        <div class="found-header">
+          <div class="found-title">⚡ МАТЧ НАЙДЕН!</div>
+          <div>
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:0.8;text-align:right">Принять через</div>
+            <div class="found-countdown" id="found-countdown">30</div>
+          </div>
+        </div>
+
+        <div class="found-body">
+          <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:16px;text-align:center" id="found-ready-count">0/10 готовы</div>
+
+          <div class="teams-grid">
+            <div>
+              <div class="team-label">Команда 1 (Вы)</div>
+              <div id="found-team1" class="team-list"></div>
+            </div>
+            <div class="vs-divider">VS</div>
+            <div>
+              <div class="team-label team-right" style="text-align:right">Команда 2</div>
+              <div id="found-team2" class="team-list right"></div>
+            </div>
+          </div>
+
+          <div class="found-actions">
+            <button class="btn btn-green btn-lg" id="accept-btn" onclick="acceptMatch()" style="min-width:180px">
+              ✓ ПРИНЯТЬ
+            </button>
+            <button class="btn btn-red btn-lg" onclick="declineMatch()" style="min-width:140px">
+              ✗ ОТКЛОНИТЬ
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── STATE: VETO ─────────────────────────────────────────────────── -->
+      <div id="state-veto" class="mm-veto hidden">
+        <div class="veto-header">
+          <div class="veto-title">🗺 ВЫБОР КАРТЫ</div>
+          <div id="veto-turn-badge" class="veto-turn-badge my-turn">Ваш ход</div>
+        </div>
+
+        <div class="veto-body">
+          <div class="veto-teams">
+            <div class="veto-team">
+              <div class="veto-team-title">⚔ Команда 1 (Вы)</div>
+              <div class="veto-players" id="veto-team1-players"></div>
+            </div>
+            <div class="veto-team" style="text-align:right">
+              <div class="veto-team-title" style="text-align:right">Команда 2 🛡</div>
+              <div class="veto-players" style="justify-content:flex-end" id="veto-team2-players"></div>
+            </div>
+          </div>
+
+          <div style="font-size:13px;color:var(--text2);margin-bottom:16px;text-align:center">
+            Нажмите на карту чтобы забанить • Последняя оставшаяся карта будет сыграна
+          </div>
+
+          <div class="maps-grid" id="maps-grid"></div>
+        </div>
+      </div>
+
+      <!-- ── STATE: MATCH ACTIVE ─────────────────────────────────────────── -->
+      <div id="state-active" class="mm-active hidden">
+        <div class="active-header">
+          <div>
+            <div class="live-badge"><div class="live-dot"></div> ИДЁТ МАТЧ</div>
+            <div style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700">CHEAT.GG MATCH</div>
+          </div>
+          <div class="active-map-badge">
+            <div>
+              <div class="active-map-label">Карта</div>
+              <div class="active-map-name" id="active-map-name">—</div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Время</div>
+            <div class="active-timer" id="active-timer">00:00</div>
+          </div>
+        </div>
+
+        <div class="active-body">
+          <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:24px;align-items:start">
+            <div>
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:12px">⚔ КОМАНДА 1</div>
+              <div id="active-team1"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px">
+              <div style="font-family:'Rajdhani',sans-serif;font-size:42px;font-weight:700;color:var(--text3)">VS</div>
+              <div style="font-size:12px;color:var(--text3);margin-top:8px;text-align:center">Ожидание<br>результатов...</div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:12px">КОМАНДА 2 🛡</div>
+              <div id="active-team2"></div>
+            </div>
+          </div>
+
+          <div style="text-align:center;margin-top:32px;padding:20px;background:var(--bg3);border-radius:10px;border:1px solid var(--border)">
+            <div style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:600;color:var(--text2);letter-spacing:1px">
+              🎮 ИГРА ИДЁТ • РЕЗУЛЬТАТ БУДЕТ ПОЛУЧЕН АВТОМАТИЧЕСКИ
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── STATE: MATCH ENDED ──────────────────────────────────────────── -->
+      <div id="state-ended" class="mm-ended hidden">
+        <div class="ended-header">
+          <div class="ended-result" id="ended-result">ПОБЕДА</div>
+          <div class="ended-score" id="ended-score">16:8</div>
+          <div class="ended-map" id="ended-map">Карта: —</div>
+          <div class="elo-change-badge positive" id="ended-elo">+25 ELO</div>
+        </div>
+
+        <div class="ended-actions">
+          <button class="btn btn-primary btn-lg" onclick="restartSearch()" style="min-width:180px">
+            ▶ НАЙТИ ЕЩЁ РАЗ
+          </button>
+          <a href="/dashboard.html" class="btn btn-secondary btn-lg" style="min-width:140px">
+            На главную
+          </a>
+        </div>
+      </div>
+
+    </div><!-- /mm-container -->
+  </div><!-- /mm-page -->
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/utils.js"></script>
+  <script src="/js/matchmaking.js"></script>
+  <script>
+    function restartSearch() {
+      showState('idle');
+      // Re-init idle info
+      document.getElementById('idle-username').textContent = currentUser.username;
+      document.getElementById('idle-elo').textContent = currentUser.elo + ' ELO';
+    }
+    init();
+  </script>
+</body>
+</html>

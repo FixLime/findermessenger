@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Рейтинг — CHEAT.GG</title>
+  <link rel="stylesheet" href="/css/main.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="/dashboard.html" class="navbar-logo">CHEAT<span>.GG</span></a>
+    <ul class="navbar-nav">
+      <li><a href="/dashboard.html">Главная</a></li>
+      <li><a href="/matchmaking.html">Матчмейкинг</a></li>
+      <li><a href="/leaderboard.html" class="active">Рейтинг</a></li>
+    </ul>
+    <div class="navbar-right">
+      <div class="navbar-user" onclick="logout()">
+        <div class="avatar avatar-sm" id="nav-avatar" style="background:#ff5500">?</div>
+        <span class="navbar-user-name" id="nav-username">—</span>
+        <div id="nav-level" style="
+          width:24px;height:24px;border-radius:50%;border:2px solid #1dcf3c;
+          color:#1dcf3c;display:flex;align-items:center;justify-content:center;
+          font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700
+        ">4</div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="lb-page">
+    <div class="lb-page-title">
+      <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+      </svg>
+      Таблица лидеров
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="lb-table" id="lb-table">
+        <thead>
+          <tr>
+            <th style="padding-left:20px">#</th>
+            <th>Игрок</th>
+            <th>Уровень</th>
+            <th>Чит</th>
+            <th>ELO</th>
+            <th>Победы</th>
+            <th>Поражения</th>
+            <th>Winrate</th>
+          </tr>
+        </thead>
+        <tbody id="lb-tbody">
+          <tr><td colspan="8" style="text-align:center;color:var(--text3);padding:40px">Загрузка...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="/js/utils.js"></script>
+  <script>
+    (async () => {
+      const user = await requireSetup();
+      if (!user) return;
+      renderNavUser(user);
+
+      const res = await fetch('/api/leaderboard');
+      const lb = await res.json();
+      const tbody = document.getElementById('lb-tbody');
+
+      if (!lb.length) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:40px">Пока нет игроков в рейтинге</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = lb.map((p, i) => {
+        const rank = i + 1;
+        const rankClass = rank === 1 ? 'top1' : rank === 2 ? 'top2' : rank === 3 ? 'top3' : '';
+        const total = p.wins + p.losses;
+        const wr = total > 0 ? Math.round((p.wins / total) * 100) + '%' : '—';
+        const level = getLevel(p.elo);
+        const levelColor = getLevelColor(level);
+        const isMe = p.username === user.username;
+        const cheatColor = getCheatColor(p.cheat);
+        return `<tr style="${isMe ? 'background:rgba(255,85,0,0.05)' : ''}">
+          <td style="padding-left:20px"><div class="lb-rank ${rankClass}">${rank}</div></td>
+          <td>
+            <div class="lb-user">
+              ${renderAvatar(p.username, 'avatar-sm')}
+              <span class="lb-username" style="${isMe ? 'color:var(--accent)' : ''}">${p.username}${isMe ? ' 👤' : ''}</span>
+            </div>
+          </td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div style="
+                width:28px;height:28px;border-radius:50%;
+                border:2px solid ${levelColor};color:${levelColor};
+                display:flex;align-items:center;justify-content:center;
+                font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700
+              ">${level}</div>
+              <span style="font-size:12px;color:var(--text3)">${getLevelName(level)}</span>
+            </div>
+          </td>
+          <td><span style="font-size:13px;font-weight:700;color:${cheatColor}">${p.cheat || '—'}</span></td>
+          <td><div class="lb-elo" style="color:${levelColor}">${p.elo}</div></td>
+          <td style="color:var(--green);font-weight:600">${p.wins}</td>
+          <td style="color:var(--red);font-weight:600">${p.losses}</td>
+          <td style="font-weight:600">${wr}</td>
+        </tr>`;
+      }).join('');
+    })();
+  </script>
+</body>
+</html>

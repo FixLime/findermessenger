@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Главная — CHEAT.GG</title>
+  <link rel="stylesheet" href="/css/main.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/dashboard.html" class="navbar-logo">CHEAT<span>.GG</span></a>
+
+    <ul class="navbar-nav">
+      <li><a href="/dashboard.html" class="active">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Главная
+      </a></li>
+      <li><a href="/matchmaking.html">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>
+        </svg>
+        Матчмейкинг
+      </a></li>
+      <li><a href="/leaderboard.html">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+        </svg>
+        Рейтинг
+      </a></li>
+    </ul>
+
+    <div class="navbar-right">
+      <div class="navbar-user" onclick="logout()">
+        <div class="avatar avatar-sm" id="nav-avatar" style="background:#ff5500">?</div>
+        <span class="navbar-user-name" id="nav-username">—</span>
+        <div id="nav-level" style="
+          width:24px;height:24px;border-radius:50%;border:2px solid #1dcf3c;
+          color:#1dcf3c;display:flex;align-items:center;justify-content:center;
+          font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700
+        ">4</div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Dashboard Layout -->
+  <div class="dashboard-layout">
+
+    <!-- Profile Sidebar -->
+    <aside>
+      <div class="profile-card">
+        <div class="profile-banner"></div>
+        <div class="profile-info">
+          <div class="profile-avatar-wrap">
+            <div class="avatar avatar-xl" id="profile-avatar" style="
+              background:#ff5500;
+              border: 4px solid var(--bg2);
+              margin-top: -8px;
+            ">?</div>
+            <div id="profile-level-badge" style="margin-bottom:4px"></div>
+          </div>
+
+          <div class="profile-username" id="profile-username">Загрузка...</div>
+          <div id="profile-cheat-badge" style="margin-top:4px"></div>
+          <div class="ping-badge" id="profile-ping">
+            <div class="ping-dot"></div>
+            <span>—</span>
+          </div>
+
+          <div class="elo-progress-wrap">
+            <div class="elo-progress-label">
+              <span id="elo-text">1000 ELO</span>
+              <span id="elo-next-text" style="color:var(--text3)"></span>
+            </div>
+            <div class="elo-progress-bar">
+              <div class="elo-progress-fill" id="elo-bar" style="width:0%"></div>
+            </div>
+          </div>
+
+          <div class="profile-stats" id="profile-stats">
+            <div class="stat-box">
+              <div class="stat-value" id="stat-wins">0</div>
+              <div class="stat-label">Победы</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value" id="stat-losses">0</div>
+              <div class="stat-label">Поражения</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value" id="stat-wr">—</div>
+              <div class="stat-label">Winrate</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="dashboard-main">
+
+      <!-- Find Match -->
+      <div class="find-match-card">
+        <div class="find-match-title">Найти игру</div>
+        <a href="/matchmaking.html" class="find-match-btn">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>
+          </svg>
+          НАЙТИ МАТЧ
+        </a>
+        <div class="find-match-note">Подбор по ELO рейтингу и читу • Карта 5v5</div>
+        <div class="online-counter">
+          <div class="online-dot"></div>
+          <span id="online-text">Онлайн: загрузка...</span>
+        </div>
+      </div>
+
+      <!-- Top Players preview -->
+      <div class="card">
+        <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span>Топ игроков</span>
+          <a href="/leaderboard.html" style="font-size:13px;font-weight:500">Все →</a>
+        </div>
+        <table class="lb-table" id="top-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Игрок</th>
+              <th>Чит</th>
+              <th>ELO</th>
+              <th>W/L</th>
+            </tr>
+          </thead>
+          <tbody id="top-tbody">
+            <tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px">Загрузка...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/js/utils.js"></script>
+  <script>
+    (async () => {
+      const user = await requireSetup();
+      if (!user) return;
+
+      renderNavUser(user);
+
+      // Avatar
+      const avatar = document.getElementById('profile-avatar');
+      avatar.style.background = getUserColor(user.username);
+      avatar.textContent = user.username.charAt(0).toUpperCase();
+
+      // Username
+      document.getElementById('profile-username').textContent = user.username;
+
+      // Level badge
+      document.getElementById('profile-level-badge').innerHTML = renderLevelBadge(user.elo, 'lg');
+
+      // Cheat badge
+      document.getElementById('profile-cheat-badge').innerHTML = renderCheatBadge(user.cheat);
+
+      // Ping
+      document.getElementById('profile-ping').innerHTML = `
+        <div class="ping-dot"></div>
+        <span>Пинг: <strong>${user.avg_ping} мс</strong></span>
+      `;
+
+      // ELO progress
+      const prog = getLevelProgress(user.elo);
+      document.getElementById('elo-text').textContent = `${user.elo} ELO`;
+      if (prog.next) {
+        document.getElementById('elo-next-text').textContent = `До LV${getLevel(user.elo) + 1}: ${prog.toNext}`;
+      } else {
+        document.getElementById('elo-next-text').textContent = 'МАКС';
+      }
+      document.getElementById('elo-bar').style.width = prog.progress + '%';
+      document.getElementById('elo-bar').style.background = getLevelColor(getLevel(user.elo));
+
+      // Stats
+      document.getElementById('stat-wins').textContent = user.wins;
+      document.getElementById('stat-losses').textContent = user.losses;
+      const total = user.wins + user.losses;
+      document.getElementById('stat-wr').textContent = total > 0
+        ? Math.round((user.wins / total) * 100) + '%' : '—';
+
+      // Fake online counter
+      document.getElementById('online-text').textContent =
+        `Онлайн: ${Math.floor(Math.random() * 800) + 200} игроков`;
+
+      // Leaderboard
+      const res = await fetch('/api/leaderboard');
+      const lb = await res.json();
+      const tbody = document.getElementById('top-tbody');
+
+      if (!lb.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px">Пока нет игроков</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = lb.slice(0, 10).map((p, i) => {
+        const rank = i + 1;
+        const rankClass = rank === 1 ? 'top1' : rank === 2 ? 'top2' : rank === 3 ? 'top3' : '';
+        const total = p.wins + p.losses;
+        const wr = total > 0 ? Math.round((p.wins / total) * 100) + '%' : '—';
+        const color = getCheatColor(p.cheat);
+        return `<tr>
+          <td><div class="lb-rank ${rankClass}">${rank}</div></td>
+          <td>
+            <div class="lb-user">
+              ${renderAvatar(p.username, 'avatar-sm')}
+              ${renderSmallLevel(p.elo)}
+              <span class="lb-username">${p.username}</span>
+            </div>
+          </td>
+          <td><span style="font-size:12px;font-weight:700;color:${color}">${p.cheat || '—'}</span></td>
+          <td><div class="lb-elo" style="color:${getLevelColor(getLevel(p.elo))}">${p.elo}</div></td>
+          <td style="color:var(--text2);font-size:13px">${p.wins}/${p.losses} <span style="color:var(--text3)">(${wr})</span></td>
+        </tr>`;
+      }).join('');
+    })();
+  </script>
+</body>
+</html>

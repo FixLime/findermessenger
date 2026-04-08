@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Настройка профиля — CHEAT.GG</title>
+  <link rel="stylesheet" href="/css/main.css" />
+</head>
+<body>
+  <div class="setup-page">
+
+    <div class="setup-header">
+      <div class="logo">CHEAT<span style="color:#f0f0f0">.GG</span></div>
+      <h1>Настройка профиля</h1>
+      <p>Заполните информацию для настройки подбора матчей</p>
+    </div>
+
+    <div class="setup-container">
+
+      <!-- Cheat Selection -->
+      <div class="setup-section">
+        <div class="setup-section-title">Какой чит вы используете?</div>
+
+        <div class="cheat-grid" id="cheat-grid">
+          <!-- Filled by JS -->
+        </div>
+
+        <div class="ping-note" style="margin-top:16px">
+          <span class="ping-note-icon">💡</span>
+          <div class="ping-note-text">
+            <strong>Выбор чита нужен для наиболее лучшего подбора матчей по читу.</strong>
+            Мы группируем игроков с одинаковым или похожим читом для более справедливых и сбалансированных игр.
+          </div>
+        </div>
+      </div>
+
+      <!-- Ping -->
+      <div class="setup-section">
+        <div class="setup-section-title">Средний пинг</div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="ping-group">
+            <div class="ping-display">
+              <div>
+                <span class="ping-value" id="ping-val">50</span>
+                <span class="ping-unit"> мс</span>
+              </div>
+              <div style="font-size:13px;color:var(--text2)" id="ping-desc">Отличный пинг</div>
+            </div>
+            <input class="ping-slider" type="range" id="ping-slider" min="1" max="300" value="50" />
+            <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--text3)">
+              <span>1 мс</span>
+              <span>150 мс</span>
+              <span>300 мс</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error & Submit -->
+      <div id="alert" class="alert alert-error" style="margin-bottom:16px"></div>
+
+      <button class="btn btn-primary btn-xl" id="submit-btn" style="width:100%">
+        ПРОДОЛЖИТЬ →
+      </button>
+
+    </div>
+  </div>
+
+  <script src="/js/utils.js"></script>
+  <script>
+    const CHEATS = [
+      { name: 'Neverlose', icon: 'NL', color: '#8b5cf6' },
+      { name: 'Nixware',   icon: 'NX', color: '#3b82f6' },
+      { name: 'Fatality',  icon: 'FT', color: '#ef4444' },
+      { name: 'Skeet.cc',  icon: 'SK', color: '#22c55e' },
+      { name: 'Onetap',    icon: 'OT', color: '#14b8a6' },
+      { name: 'Aimware',   icon: 'AW', color: '#f97316' },
+      { name: 'Gamesense', icon: 'GS', color: '#06b6d4' },
+      { name: 'Interwebz', icon: 'IW', color: '#ec4899' },
+      { name: 'Primordial',icon: 'PR', color: '#a16207' },
+      { name: 'Другое',    icon: '?',  color: '#6b7280' },
+    ];
+
+    const PING_DESC = [
+      [0,   30,  'Отличный пинг'],
+      [31,  60,  'Хороший пинг'],
+      [61,  100, 'Нормальный пинг'],
+      [101, 150, 'Средний пинг'],
+      [151, 200, 'Высокий пинг'],
+      [201, 300, 'Очень высокий'],
+    ];
+
+    let selectedCheat = null;
+
+    // Check auth
+    (async () => {
+      const user = await requireLogin();
+      if (!user) return;
+      if (user.setup_done) { window.location.href = '/dashboard.html'; }
+    })();
+
+    // Render cheat cards
+    const grid = document.getElementById('cheat-grid');
+    CHEATS.forEach(c => {
+      const card = document.createElement('div');
+      card.className = 'cheat-card';
+      card.style.setProperty('--cheat-color', c.color);
+      card.dataset.cheat = c.name;
+      card.innerHTML = `
+        <div class="cheat-icon" style="background:${c.color}">${c.icon}</div>
+        <div class="cheat-name">${c.name}</div>
+      `;
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.cheat-card').forEach(x => x.classList.remove('selected'));
+        card.classList.add('selected');
+        selectedCheat = c.name;
+      });
+      grid.appendChild(card);
+    });
+
+    // Ping slider
+    const slider = document.getElementById('ping-slider');
+    const pingVal = document.getElementById('ping-val');
+    const pingDesc = document.getElementById('ping-desc');
+
+    function updatePing(v) {
+      pingVal.textContent = v;
+      const desc = PING_DESC.find(d => v >= d[0] && v <= d[1]);
+      if (desc) {
+        pingDesc.textContent = desc[2];
+        const colors = { 'Отличный': '#23d45e', 'Хороший': '#23d45e', 'Нормальный': '#f5d328', 'Средний': '#f0a030', 'Высокий': '#f04040', 'Очень': '#f04040' };
+        const key = Object.keys(colors).find(k => desc[2].startsWith(k));
+        pingDesc.style.color = key ? colors[key] : 'var(--text2)';
+      }
+    }
+
+    slider.addEventListener('input', () => updatePing(slider.value));
+    updatePing(50);
+
+    // Submit
+    const alertEl = document.getElementById('alert');
+    document.getElementById('submit-btn').addEventListener('click', async () => {
+      alertEl.className = 'alert alert-error';
+
+      if (!selectedCheat) {
+        alertEl.textContent = 'Пожалуйста, выберите чит';
+        alertEl.className = 'alert alert-error show';
+        return;
+      }
+
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'СОХРАНЕНИЕ...';
+
+      const res = await fetch('/api/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cheat: selectedCheat, avg_ping: parseInt(slider.value) })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        btn.textContent = '✓ ГОТОВО';
+        window.location.href = '/dashboard.html';
+      } else {
+        alertEl.textContent = data.error || 'Ошибка';
+        alertEl.className = 'alert alert-error show';
+        btn.disabled = false;
+        btn.textContent = 'ПРОДОЛЖИТЬ →';
+      }
+    });
+  </script>
+</body>
+</html>

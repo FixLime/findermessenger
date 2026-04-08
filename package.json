@@ -1,0 +1,16 @@
+{
+  "name": "cheatmatch",
+  "version": "1.0.0",
+  "description": "Competitive HvH matchmaking platform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^9.4.3",
+    "express": "^4.18.3",
+    "express-session": "^1.17.3",
+    "socket.io": "^4.7.4"
+  }
+}
