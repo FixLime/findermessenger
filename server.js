@@ -30,7 +30,7 @@ db.exec(`
 app.use(express.json());
 app.use(express.static('public'));
 app.use(session({
-  secret: 'cm_x9k2m_secret_7z',
+  secret: process.env.SESSION_SECRET || 'cm_x9k2m_secret_7z',
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 }
