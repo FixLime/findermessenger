@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session');
+const MemoryStore = require('memorystore')(session);
 const bcrypt = require('bcryptjs');
 const Database = require('better-sqlite3');
 const { createServer } = require('http');
@@ -33,6 +34,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'cm_x9k2m_secret_7z',
   resave: false,
   saveUninitialized: false,
+  store: new MemoryStore({ checkPeriod: 86400000 }),
   cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 }
 }));
 
@@ -355,6 +357,6 @@ function endMatch(match) {
 
 // ─── Start Server ──────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
-httpServer.listen(PORT, () => {
-  console.log(`CheatMatch running on http://localhost:${PORT}`);
+httpServer.listen(PORT, '0.0.0.0', () => {
+  console.log(`CheatMatch running on port ${PORT}`);
 });
